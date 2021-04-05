@@ -1,4 +1,8 @@
 //620043175
+//620118713
+//620107205
+
+
 #include<stdlib.h>
 #include<string.h>
 #include<stdio.h>
@@ -7,17 +11,35 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 
+//create grid structure to save cell name and value
+
+ struct Grid {
+	char cell[30];
+        char value[30];
+};//end struct
+
+
 	char * const gnum = "     A    B    C    D    E   F    G     H   I \n";
 
 	char * const hori = "  .____.____.____.____.____.____.____.____.____.";
         char * const vert = "  |    |    |    |    |    |    |    |    |    |";
-        char * grid[9][9];
-
+        //char * grid[9][9];
+	struct Grid grid[9][9];
 
 void createGrid(){
-        for(int i =0;i<9;i++){
-                for(int j=0;j<9;j++){
-                        grid[i][j]= "R";
+	int i=0;
+	int j=0;
+	char x[] = "A";
+	char cname[2];
+        for( i =0;i<9;i++){
+		x[0]=x[0]+i;
+                for( j=0;j<9;j++){
+			strcat(cname,x);
+			char *z;
+			sprintf(z, "%d", j+1);
+		       	strcat(cname,z);                        
+			strcat(grid[i][j].cell, cname);
+			printf("%s\n",grid[i][j].cell);
                 }//endfor
         }//endfor
 }//end function
@@ -29,10 +51,10 @@ void displayGrid(){
         for(int i =0;i<9;i++){
 		printf("%d",i+1);
                 for(int j=0;j<9;j++){
-                        if(strcmp(grid[i][j]," ")==0){
-                                printf(" | %s ",grid[i][j]);
+                        if(strcmp(grid[i][j].value," ")==0){
+                                printf(" | %s ",grid[i][j].value);
                         }else{
-                                printf(" | %s ",grid[i][j]);
+                                printf(" | %s ",grid[i][j].value);
                         }
                 }//endfor
                 printf(" |\n");
@@ -46,7 +68,9 @@ void displayGrid(){
 //save current spreadsheet from memory to a location on the file system running server
 //save in amy format
 //only first client shoult be able to save
-void saveWorksheet( ){}//end function
+void saveWorksheet( ){
+
+}//end function
 
 /*create threads*/
 pthread_t tid[3];
@@ -113,9 +137,18 @@ void main(){
 
 
 void* conn(void *arg){
+	int recvr, sndr;
+	char text[] = "please enter input";
+	char mess[80];	
 	pthread_mutex_lock(&lock);
 	tc+=1;
 	printf("connect %d made \n",tc);
-  
+	sndr = send(sndr, text, strlen(text), 0 );
+  	recvr  = recv(recvr, mess, 80, 0);
+
+	//send message to client to ask for inpiut
+	
+	//close connection
+	
 	pthread_mutex_unlock(&lock);
 }

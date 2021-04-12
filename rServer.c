@@ -20,7 +20,6 @@
 
 
 	char * const gnum = "     A    B    C    D    E   F    G     H   I \n";
-
 	char * const hori = "  .____.____.____.____.____.____.____.____.____.";
         char * const vert = "  |    |    |    |    |    |    |    |    |    |";
         //char * grid[9][9];
@@ -32,18 +31,21 @@ void createGrid(){
 	char x[] = "A";
 	char cname[2];
         for( i =0;i<9;i++){
+		strcpy(cname," ");
 		x[0]=x[0]+i;
+		printf("x[0]: %c\n",x[0]);
                 for( j=0;j<9;j++){
-			strcat(cname,x);
-			char *z;
-			sprintf(z, "%d", j+1);
-		       	strcat(cname,z);                        
+			strcpy(cname,x);
+			char z[15]=""; 
+			sprintf(z, "%d", j+1); // <-- add number to cname
+		       	strcat(cname,z);
+			//printf("cname: %s   z: %s \n",cname, z);			
 			strcat(grid[i][j].cell, cname);
-			printf("%s\n",grid[i][j].cell);
+			printf("grid : %s\n",grid[i][j].cell);
                 }//endfor
+		strcpy(x,"A");
         }//endfor
 }//end function
-
 
 void displayGrid(){
 	printf("%s", gnum);
@@ -64,23 +66,59 @@ void displayGrid(){
 }//end function
 
 
-/*server functions*/
-//save current spreadsheet from memory to a location on the file system running server
-//save in amy format
-//only first client shoult be able to save
+		/*server functions*/
 void saveWorksheet( ){
-
+	FILE *fpt;
+	int x;
+	//do check to see client number
+	//if tid == 1 allow to save
+	fpt =fopen("save.txt","w");
+	fprintf(fpt,"%s",gnum);  	
+	fprintf(fpt,"%s\n",hori);
+        for(int i =0;i<9;i++){
+		fprintf(fpt,"%d",i+1);
+                for(int j=0;j<9;j++){
+                        if(strcmp(grid[i][j].value," ")==0){
+                               	fprintf(fpt," | %s ",grid[i][j].value);
+                        }else{
+				fprintf(fpt," |%s ", grid[i][j].value);
+                        }
+                }//endfor
+                char s[]=" |\n";
+                fprintf(fpt,"%s",s);
+                fprintf(fpt,"%s \n",vert);
+		fprintf(fpt,"%s \n",hori);	
+	}//endfor
+	fclose(fpt); 
 }//end function
 
-/*create threads*/
+
+ void checkCell(char cell[2]){               // checks for validity of the Cell
+	int col,row;
+    	if(cell[0]>='A' && cell[0]<='Z')
+     		col = cell[0]-'A'+1;
+     	else
+     		col = cell[0] - 'a'+1;      // Extracting the row and column number from cell number
+     	row = cell[1] - '1'+1;
+     	if(row>9 || row<0 || col>9 || col<0)
+     	{
+        	printf("\n Invalid cell number \n");
+        	return 0;
+     	}
+    	return 1;
+}
+
+
+		/*create threads*/
 pthread_t tid[3];
 int tc;
 pthread_mutex_t lock;
 void* conn(void *args);
-
+	/*============ Main ============*/
 void main(){
-	//createGrid();
-        //displayGrid();
+	createGrid();
+	saveWorksheet();
+        displayGrid();
 	int k;
 	int p = 0;
 	                //create socket
@@ -90,10 +128,10 @@ void main(){
         unsigned short listenPort = 6000;
 
         sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if(sock<0)
+        if(sock<0){
                 printf("socket() failed\n");
                 exit(9);
-        //return 0;
+	}//end if
 
                 //make local address structure
         memset(&myAddr, 0, sizeof(myAddr)); //clr structure
@@ -106,30 +144,25 @@ void main(){
         if(i<0)
                 printf("bind() failed\n");
         
-	//listen for connection
+		//listen for connection
         i = listen(sock, 5);
         if(i<0)
                 printf("listen() failed");
 	
 
 	while(p<3){
-	//accept incoming connection
+		//accept incoming connection
         addrSize = sizeof(recvAddr);
         sockRecv = accept(sock, (struct sockaddr *) &recvAddr, &addrSize);
-
 
 		/* thread here*/
 	if(pthread_mutex_init(&lock,NULL)!=0)
 		printf("failed to initialized mutex");
-		
-       	//for(int j=0;j<3;j++){
 		k = pthread_create(&(tid[p]),NULL,&conn, NULL);
 		if(k!=0)
 			printf("cannot create thread");
 	//}//end for
 	pthread_join(tid[p],NULL);
-	//pthread_join(tid[1],NULL);
-	//pthread_join(tid[2],NULL);
 	p+=1;
 	pthread_mutex_destroy(&lock);
 	}
